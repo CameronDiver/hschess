@@ -1,32 +1,40 @@
 module Board where
 
 import Data.Array
-import Data.List ( intersperse, intercalate)
-import Data.Char
+import Data.List (intersperse, intercalate)
+import Data.Char (toUpper, ord)
+import Debug.Trace (traceShow)
 
 import ChessData
 
-type Board = [[Piece]]
-type Row = [Piece]
+type Position = String
+type Board = Array (Int, Int) Piece
+
+initialBoard :: Board
+initialBoard = listArray ((0,0), (7,7)) initialBoardList
+  where
+    initialBoardList =    backRowForColour Black ++
+                          pawnRowForColour Black ++
+                          replicate 8 Empty ++
+                          replicate 8 Empty ++
+                          replicate 8 Empty ++
+                          replicate 8 Empty ++
+                          pawnRowForColour White ++
+                          backRowForColour White
+
+
+pawnRowForColour :: Colour -> [Piece]
+pawnRowForColour c = replicate 8 (Piece Pawn c)
+
+backRowForColour :: Colour -> [Piece]
+backRowForColour c = (Piece Rook c) : (Piece Knight c) : (Piece Bishop c) :
+                     (Piece Queen c) : (Piece King c) : (Piece Bishop c) :
+                     (Piece Knight c) : [(Piece Rook c)]
+
 
 showBoard :: Board -> String
-showBoard board = (intercalate "\n" $
-                   map drawRow $ zip board (reverse [0..7]))
-                  ++ "\n  a b c d e f g h"
-
-drawRow :: (Row, Int) -> String
-drawRow (row, n) =
-  (show $ rowToNum n) ++ " " ++ intersperse ' ' [showPiece x | x <- row]
-
-rowToNum :: Int -> Int
-rowToNum n = 1 + n
-
-
-square :: Board -> (Int, Int) -> Piece
-square (b:bs) (x, y) =
-  if y > 0 then square bs (x, y-1)
-  else if x > 0 then square bs (x-1, y)
-       else undefined -- TODO
+showBoard b = intercalate "\n"
+              [intersperse ' ' $ map showPiece [b ! (x, y) | y <- [0..7]] | x <- [0..7]]
 
 -- Make a character from a piece, taking into account colour
 showPiece :: Piece -> Char
@@ -45,29 +53,38 @@ showPiece' ptype =
   Queen -> 'q'
   King -> 'k'
 
-makeBoardFEN :: String -> Board
-makeBoardFEN _ = undefined
+setBoardCell :: Board -> (Int, Int) -> Piece -> Board
+setBoardCell board pos p = board // [(pos, p)]
 
-makeBoard :: Board
-makeBoard =
-  reverse
-  [backRowForColour White,
-   pawnRowForColour White,
-   replicate 8 Empty,
-   replicate 8 Empty,
-   replicate 8 Empty,
-   replicate 8 Empty,
-   pawnRowForColour Black,
-   backRowForColour Black]
+getPieceAt :: Board -> (Int, Int) -> Piece
+getPieceAt board pos = board ! pos
+
+positionToTuple :: Position -> (Int, Int)
+positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
+  where
+    fileToN f = (ord f) - (ord 'a')
+    rowToN n = n - 1
+positionToTuple _ = undefined
 
 
-pawnRowForColour :: Colour -> [Piece]
-pawnRowForColour c =
-  replicate 8 (Piece Pawn c)
+tupleToPosition :: (Int, Int) -> Position
+tupleToPosition (a, b) = (toEnum (fromEnum 'a' + (7 - b))) : show (a + 1)
 
-backRowForColour :: Colour -> [Piece]
-backRowForColour c =
-  (Piece Rook c) : (Piece Knight c) : (Piece Bishop c) :
-   (Piece Queen c) : (Piece King c) : (Piece Bishop c) :
-  (Piece Knight c) : [(Piece Rook c)]
+
+movePieceByPos :: Board -> Position -> Position -> Board
+movePieceByPos board p1 p2 = movePiece board (positionToTuple p1) (positionToTuple p2)
+
+
+movePiece :: Board -> (Int, Int) -> (Int, Int) -> Board
+movePiece board p1 p2 = do
+  let p = getPieceAt board p1
+  let b = setBoardCell board p1 Empty
+  setBoardCell b p2 p
+
+piecesByColour :: Board -> Colour -> [((Int, Int), Piece)]
+piecesByColour board col = filter (isCol board col) [((x, y), board ! (x,y)) | x <- [0..7], y <- [0..7]]
+  where
+    isCol :: Board -> Colour -> ((Int, Int), Piece) -> Bool
+    isCol b c (_, Empty) = False
+    isCol b c (_, (Piece ptype colour)) = colour == c
 

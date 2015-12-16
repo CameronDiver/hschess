@@ -1,5 +1,6 @@
 module ChessData where
--- The piece types 
+
+-- The piece types
 data PieceType = Pawn
                | Knight
                | Bishop
@@ -16,7 +17,7 @@ data Colour = White
 -- Combination of piece and it's colour
 data Piece = Piece PieceType Colour
            | Empty
-           deriving ( Show, Eq )
+           deriving ( Show, Eq)
 
 -- A lookup type
 type Square = (Int, Int)
