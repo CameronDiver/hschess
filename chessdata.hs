@@ -15,7 +15,7 @@ data Colour = White
             deriving ( Show, Eq )
 
 -- Combination of piece and it's colour
-data Piece = Piece PieceType Colour
+data Piece = Piece { ptype::PieceType, colour::Colour }
            | Empty
            deriving ( Show, Eq)
 

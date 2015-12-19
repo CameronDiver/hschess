@@ -8,6 +8,7 @@ import Debug.Trace (traceShow)
 import ChessData
 
 type Position = String
+type FEN = String
 type Board = Array (Int, Int) Piece
 
 initialBoard :: Board
@@ -22,6 +23,9 @@ initialBoard = listArray ((0,0), (7,7)) initialBoardList
                           pawnRowForColour White ++
                           backRowForColour White
 
+
+boardFromFEN :: FEN -> Board
+boardFromFEN = undefined
 
 pawnRowForColour :: Colour -> [Piece]
 pawnRowForColour c = replicate 8 (Piece Pawn c)
@@ -56,8 +60,8 @@ showPiece' ptype =
 setBoardCell :: Board -> (Int, Int) -> Piece -> Board
 setBoardCell board pos p = board // [(pos, p)]
 
-getPieceAt :: Board -> (Int, Int) -> Piece
-getPieceAt board pos = board ! pos
+pieceAt :: Board -> (Int, Int) -> Piece
+pieceAt board pos = board ! pos
 
 positionToTuple :: Position -> (Int, Int)
 positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
@@ -77,7 +81,7 @@ movePieceByPos board p1 p2 = movePiece board (positionToTuple p1) (positionToTup
 
 movePiece :: Board -> (Int, Int) -> (Int, Int) -> Board
 movePiece board p1 p2 = do
-  let p = getPieceAt board p1
+  let p = pieceAt board p1
   let b = setBoardCell board p1 Empty
   setBoardCell b p2 p
 
