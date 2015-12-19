@@ -6,10 +6,7 @@ import Data.Char (toUpper, ord)
 import Debug.Trace (traceShow)
 
 import ChessData
-
-type Position = String
-type FEN = String
-type Board = Array (Int, Int) Piece
+import FEN
 
 initialBoard :: Board
 initialBoard = listArray ((0,0), (7,7)) initialBoardList
@@ -24,8 +21,8 @@ initialBoard = listArray ((0,0), (7,7)) initialBoardList
                           backRowForColour White
 
 
-boardFromFEN :: FEN -> Board
-boardFromFEN = undefined
+boardFromFEN :: String -> Board
+boardFromFEN fen = listArray ((0,0), (7,7)) $ concat $ listFromFEN fen
 
 pawnRowForColour :: Colour -> [Piece]
 pawnRowForColour c = replicate 8 (Piece Pawn c)
