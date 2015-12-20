@@ -25,7 +25,23 @@ sliderPiece ptype =
 
 
 genMoves :: Board -> (Int, Int) -> [Board]
-genMoves board pos = traceShow moves $ undefined
+genMoves board pos = traceShow ends $ undefined
   where
     piece = pieceAt board pos
     moves = moveVectors $ ptype piece
+    ends  = filter (isEmpty board) $ filter legalPos $ map (addPos pos) moves
+
+
+addPos :: (Int, Int) -> (Int, Int) -> (Int, Int)
+addPos (a, b) (c, d) = (a+c, b+d)
+
+-- Just do bounds checking for the time being
+legalPos :: (Int, Int) -> Bool
+legalPos (a, b) = a >= 0 && a <= 7 && b >= 0 && b <= 7
+
+-- Is that position on the board empty?
+isEmpty :: Board -> (Int, Int) -> Bool
+isEmpty board pos = pieceAt board pos == Empty
+
+isOppositeColour :: Board -> Colour -> (Int, Int) -> Bool
+isOppositeColour board col pos = (colour (pieceAt board pos)) /= col
