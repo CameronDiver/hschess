@@ -60,13 +60,13 @@ showPiece' ptype =
     Queen  -> 'q'
     King   -> 'k'
 
-setBoardCell :: Board -> (Int, Int) -> Piece -> Board
+setBoardCell :: Board -> Square -> Piece -> Board
 setBoardCell board pos p = board // [(pos, p)]
 
-pieceAt :: Board -> (Int, Int) -> Piece
+pieceAt :: Board -> Square -> Piece
 pieceAt board pos = board ! pos
 
-positionToTuple :: Position -> (Int, Int)
+positionToTuple :: Position -> Square
 positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
   where
     fileToN f            = (ord f) - (ord 'a')
@@ -74,7 +74,7 @@ positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
 positionToTuple _        = undefined
 
 
-tupleToPosition :: (Int, Int) -> Position
+tupleToPosition :: Square -> Position
 tupleToPosition (a, b) = (toEnum (fromEnum 'a' + (7 - b))) : show (a + 1)
 
 
@@ -82,16 +82,16 @@ movePieceByPos :: Board -> Position -> Position -> Board
 movePieceByPos board p1 p2 = movePiece board (positionToTuple p1) (positionToTuple p2)
 
 
-movePiece :: Board -> (Int, Int) -> (Int, Int) -> Board
+movePiece :: Board -> Square -> Square -> Board
 movePiece board p1 p2 = do
   let p = pieceAt board p1
   let b = setBoardCell board p1 Empty
   setBoardCell b p2 p
 
-piecesByColour :: Board -> Colour -> [((Int, Int), Piece)]
+piecesByColour :: Board -> Colour -> [(Square, Piece)]
 piecesByColour board col = filter (isCol board col) [((x, y), board ! (x,y)) | x <- [0..7], y <- [0..7]]
   where
-    isCol :: Board -> Colour -> ((Int, Int), Piece) -> Bool
+    isCol :: Board -> Colour -> (Square, Piece) -> Bool
     isCol b c (_, Empty)                = False
     isCol b c (_, (Piece ptype colour)) = colour == c
 

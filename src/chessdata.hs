@@ -18,7 +18,7 @@ data Colour = White
 
 -- Combination of piece and it's colour
 data Piece = Piece { ptype::PieceType, colour::Colour }
-           | Empty 
+           | Empty
            deriving ( Show, Eq)
 
 -- A lookup type
@@ -26,7 +26,7 @@ type Square = (Int, Int)
 
 -- The board types
 type Position = String
-type Board = Array (Int, Int) Piece
+type Board = Array Square Piece
 
 -- Represent casting rights
 data CastlingRight = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide

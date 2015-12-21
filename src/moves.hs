@@ -6,7 +6,7 @@ import ChessData
 import Board
 
 -- Return move vectors for each piece type
-moveVectors :: Piece -> [(Int, Int)]
+moveVectors :: Piece -> [Square]
 moveVectors (Piece ptype clr) =
   case (ptype, clr) of
     (Pawn, Black)   -> [(1, y) | y <- [0,1,-1]]
@@ -29,7 +29,7 @@ sliderPiece ptype =
 
 -- Generate pseudo-legal moves, that is, moves that are legal but may
 -- leave the player in check which is not legal.
-genMoves :: Board -> (Int, Int) -> [Board]
+genMoves :: Board -> Square -> [Board]
 genMoves board pos = map (movePiece board pos) pslegal
   where
     piece = pieceAt board pos
@@ -39,19 +39,19 @@ genMoves board pos = map (movePiece board pos) pslegal
     -- TODO: sliding
 
 
-addPos :: (Int, Int) -> (Int, Int) -> (Int, Int)
+addPos :: Square -> Square -> Square
 addPos (a, b) (c, d) = (a+c, b+d)
 
 -- Just do bounds checking for the time being
-legalPos :: (Int, Int) -> Bool
+legalPos :: Square -> Bool
 legalPos (a, b) = a >= 0 && a <= 7 && b >= 0 && b <= 7
 
 -- Is that position on the board empty?
-isEmpty :: Board -> (Int, Int) -> Bool
+isEmpty :: Board -> Square -> Bool
 isEmpty board pos = pieceAt board pos == Empty
 
-isOppositeColour :: Board -> Colour -> (Int, Int) -> Bool
+isOppositeColour :: Board -> Colour -> Square -> Bool
 isOppositeColour board col pos = (colour (pieceAt board pos)) /= col
 
-legalBoardPos :: Board -> Colour -> (Int, Int) -> Bool
+legalBoardPos :: Board -> Colour -> Square -> Bool
 legalBoardPos board col pos = isEmpty board pos || isOppositeColour board col pos
