@@ -28,8 +28,9 @@ genMoves :: Board -> (Int, Int) -> [Board]
 genMoves board pos = traceShow ends $ undefined
   where
     piece = pieceAt board pos
+    col   = colour piece
     moves = moveVectors $ ptype piece
-    ends  = filter (isEmpty board) $ filter legalPos $ map (addPos pos) moves
+    ends  = filter (legalBoardPos board col) $ filter legalPos $ map (addPos pos) moves
 
 
 addPos :: (Int, Int) -> (Int, Int) -> (Int, Int)
@@ -45,3 +46,6 @@ isEmpty board pos = pieceAt board pos == Empty
 
 isOppositeColour :: Board -> Colour -> (Int, Int) -> Bool
 isOppositeColour board col pos = (colour (pieceAt board pos)) /= col
+
+legalBoardPos :: Board -> Colour -> (Int, Int) -> Bool
+legalBoardPos board col pos = isEmpty board pos || isOppositeColour board col pos
