@@ -5,13 +5,17 @@ import Debug.Trace (traceShow)
 import ChessData
 import Board
 
-moveVectors :: PieceType -> [(Int, Int)]
-moveVectors Pawn   = undefined
-moveVectors Knight = [(x, y) | x <- [1, 2, -1, -2], y <- [1, 2, -1, -2], x/=y, x/=(-y)]
-moveVectors Rook   = [(1,0), (0,1), (-1, 0), (0, -1)]
-moveVectors Bishop = [(1, 1), (-1, -1), (-1, 1), (1, -1)]
-moveVectors Queen  = [(x, y) | x <- [-1..1], y <- [-1..1], (x,y) /= (0,0)]
-moveVectors King   = moveVectors Queen
+-- Return move vectors for each piece type
+moveVectors :: Piece -> [(Int, Int)]
+moveVectors (Piece ptype clr) =
+	case (ptype, clr) of
+		(Pawn, Black)	-> [(y, 1) | y <- [0,1,-1]]
+		(Pawn, White)	-> [(y, -1) | y <- [0,1,-1]]
+		(Knight, _)		-> [(x, y) | x <- [1, 2, -1, -2], y <- [1, 2, -1, -2], x/=y, x/=(-y)]
+		(Rook, _)		-> [(1,0), (0,1), (-1, 0), (0, -1)]
+		(Bishop, _)		-> [(1, 1), (-1, -1), (-1, 1), (1, -1)]
+		(Queen, _)		-> [(x, y) | x <- [-1..1], y <- [-1..1], (x,y) /= (0,0)]
+		(King, _)		-> [(x, y) | x <- [-1..1], y <- [-1..1], (x,y) /= (0,0)]
 
 -- Can this piece slide more than one square?
 sliderPiece :: PieceType -> Bool
@@ -29,7 +33,7 @@ genMoves board pos = traceShow ends $ undefined
   where
     piece = pieceAt board pos
     col   = colour piece
-    moves = moveVectors $ ptype piece
+    moves = moveVectors $ piece
     ends  = filter (legalBoardPos board col) $ filter legalPos $ map (addPos pos) moves
 
 
