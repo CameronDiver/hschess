@@ -27,14 +27,16 @@ sliderPiece ptype =
     _      -> False
 
 
-
+-- Generate pseudo-legal moves, that is, moves that are legal but may
+-- leave the player in check which is not legal.
 genMoves :: Board -> (Int, Int) -> [Board]
-genMoves board pos = traceShow ends $ undefined
+genMoves board pos = map (movePiece board pos) pslegal
   where
     piece = pieceAt board pos
     col   = colour piece
-    moves = moveVectors $ piece
-    ends  = filter (legalBoardPos board col) $ filter legalPos $ map (addPos pos) moves
+    vectors = moveVectors $ piece
+    pslegal = filter (legalBoardPos board col) $ filter legalPos $ map (addPos pos) vectors
+    -- TODO: sliding
 
 
 addPos :: (Int, Int) -> (Int, Int) -> (Int, Int)
