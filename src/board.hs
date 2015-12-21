@@ -35,7 +35,13 @@ backRowForColour c = (Piece Rook c) : (Piece Knight c) : (Piece Bishop c) :
 
 showBoard :: Board -> String
 showBoard b = intercalate "\n"
-              [intersperse ' ' $ map showPiece [b ! (x, y) | y <- [0..7]] | x <- [0..7]]
+  (map showLine [0..7]) ++ "\n   - - - - - - - -\n   a b c d e f g h"
+  where
+    showLine :: Int -> String
+    showLine i   =  (show (8-i)) ++ "| " ++
+      intersperse ' ' (map showPiece (map (getPiece i) [j | j <- [0..7]]))
+    getPiece i j = b ! (i, j)
+
 
 -- Make a character from a piece, taking into account colour
 showPiece :: Piece -> Char
