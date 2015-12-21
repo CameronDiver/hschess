@@ -11,19 +11,19 @@ listFromFEN :: String -> [[Piece]]
 listFromFEN fen = reverse $ listFromFEN' fen [[]]
 
 listFromFEN' :: String -> [[Piece]] -> [[Piece]]
-listFromFEN' [] current = current -- handle all input domain
+listFromFEN' [] current            = current -- handle all input domain
 listFromFEN' (f:en) current@(r:rs) =
   case f of
     -- space is end of FEN placement string
-    ' ' -> []
-    '/' -> next $ [] : current
-    '8' -> next $ (replicate 8 Empty):rs
+    ' '                    -> []
+    '/'                    -> next $ [] : current
+    '8'                    -> next $ (replicate 8 Empty):rs
     i | i > '0' && i < '8' -> next $ ((replicate (repeat :: Int) Empty) ++ r) : rs
-    _ -> this $ pieceFromChar f
+    _                      -> this $ pieceFromChar f
   where
-    next = listFromFEN' en
+    next       = listFromFEN' en
     this piece = next $ ((piece):r):rs
-    repeat = read [f] :: Int
+    repeat     = read [f] :: Int
 
 
 -- Helper function which is essentially just a partial part of the switch above

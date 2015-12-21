@@ -14,17 +14,16 @@ pieceScoreWithCol :: Piece -> Int
 pieceScoreWithCol Empty = 0
 pieceScoreWithCol p@(Piece ptype col)
   | col == White = pieceScore p
-  | otherwise = -pieceScore p
+  | otherwise    = -pieceScore p
 
 pieceScore :: Piece -> Int
 pieceScore (Piece ptype _) = case ptype of
-  Pawn -> 1
+  Pawn   -> 1
   Knight -> 3
   Bishop -> 3
-  Queen -> 9
-  Rook -> 5
-  King -> infinity
-
+  Queen  -> 9
+  Rook   -> 5
+  King   -> infinity
 
 -- Close enough...
 infinity :: Int

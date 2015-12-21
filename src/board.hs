@@ -40,19 +40,19 @@ showBoard b = intercalate "\n"
 -- Make a character from a piece, taking into account colour
 showPiece :: Piece -> Char
 showPiece (Piece ptype col)
-  | col == White = toUpper $ showPiece' ptype
-  | otherwise = showPiece' ptype
-showPiece Empty = '.'
+  | col == White  = toUpper $ showPiece' ptype
+  | otherwise     = showPiece' ptype
+showPiece Empty   = '.'
 
 showPiece' :: PieceType -> Char
 showPiece' ptype =
   case ptype of
-  Pawn -> 'p'
-  Knight -> 'n'
-  Bishop -> 'b'
-  Rook -> 'r'
-  Queen -> 'q'
-  King -> 'k'
+    Pawn   -> 'p'
+    Knight -> 'n'
+    Bishop -> 'b'
+    Rook   -> 'r'
+    Queen  -> 'q'
+    King   -> 'k'
 
 setBoardCell :: Board -> (Int, Int) -> Piece -> Board
 setBoardCell board pos p = board // [(pos, p)]
@@ -63,9 +63,9 @@ pieceAt board pos = board ! pos
 positionToTuple :: Position -> (Int, Int)
 positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
   where
-    fileToN f = (ord f) - (ord 'a')
-    rowToN n = n - 1
-positionToTuple _ = undefined
+    fileToN f            = (ord f) - (ord 'a')
+    rowToN n             = n - 1
+positionToTuple _        = undefined
 
 
 tupleToPosition :: (Int, Int) -> Position
@@ -86,6 +86,6 @@ piecesByColour :: Board -> Colour -> [((Int, Int), Piece)]
 piecesByColour board col = filter (isCol board col) [((x, y), board ! (x,y)) | x <- [0..7], y <- [0..7]]
   where
     isCol :: Board -> Colour -> ((Int, Int), Piece) -> Bool
-    isCol b c (_, Empty) = False
+    isCol b c (_, Empty)                = False
     isCol b c (_, (Piece ptype colour)) = colour == c
 
