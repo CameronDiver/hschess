@@ -8,7 +8,7 @@ import ChessData
 -- TODO: Use attoparsec!
 
 listFromFEN :: String -> [[Piece]]
-listFromFEN fen = reverse $ listFromFEN' fen [[]]
+listFromFEN fen = reverse $ map reverse $ listFromFEN' fen [[]]
 
 listFromFEN' :: String -> [[Piece]] -> [[Piece]]
 listFromFEN' [] current            = current -- handle all input domain
