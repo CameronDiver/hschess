@@ -9,8 +9,8 @@ import Board
 moveVectors :: Piece -> [(Int, Int)]
 moveVectors (Piece ptype clr) =
   case (ptype, clr) of
-    (Pawn, Black)   -> [(y, 1) | y <- [0,1,-1]]
-    (Pawn, White)   -> [(y, -1) | y <- [0,1,-1]]
+    (Pawn, Black)   -> [(1, y) | y <- [0,1,-1]]
+    (Pawn, White)   -> [(-1, y) | y <- [0,1,-1]]
     (Knight, _)     -> [(x, y) | x <- [1, 2, -1, -2], y <- [1, 2, -1, -2], x/=y, x/=(-y)]
     (Rook, _)       -> [(1,0), (0,1), (-1, 0), (0, -1)]
     (Bishop, _)     -> [(1, 1), (-1, -1), (-1, 1), (1, -1)]
