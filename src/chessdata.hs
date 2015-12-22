@@ -35,11 +35,13 @@ data CastlingRight = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueen
 type CastlingRights = [CastlingRight]
 
 -- A structure to hold the current state of the game
-data GameState = GameState { board :: Board,
-                             sideToMove :: Colour,
-                             castling :: CastlingRights,
-                             enPassant :: Position,
-                             halfmoveClock :: Int,
-                             fullMoveClock :: Int
-                           }
+data GameState =
+  GameState { board :: Board,             -- The position
+              sideToMove :: Colour,       -- Which side to move
+              castling :: CastlingRights, -- The available castling rights
+              enPassant :: Square,        -- Target square of available enPassent
+              halfmoveClock :: Int,       -- Increments once per player turn
+              fullMoveClock :: Int,       -- Increments once per W&B turn
+              score :: Int                -- Result of the evaluation function
+            }
 
