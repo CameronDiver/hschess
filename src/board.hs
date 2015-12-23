@@ -20,10 +20,6 @@ initialBoard = listArray ((0,0), (7,7)) initialBoardList
                           pawnRowForColour White ++
                           backRowForColour White
 
-
-boardFromFEN :: String -> Board
-boardFromFEN fen = listArray ((0,0), (7,7)) $ concat $ listFromFEN fen
-
 pawnRowForColour :: Colour -> [Piece]
 pawnRowForColour c = replicate 8 (Piece Pawn c)
 

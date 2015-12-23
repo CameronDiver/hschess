@@ -1,6 +1,7 @@
 module ChessData where
 
 import Data.Array
+import Data.Maybe
 
 -- The piece types
 data PieceType = Pawn
@@ -39,9 +40,8 @@ data GameState =
   GameState { board :: Board,             -- The position
               sideToMove :: Colour,       -- Which side to move
               castling :: CastlingRights, -- The available castling rights
-              enPassant :: Square,        -- Target square of available enPassent
-              halfmoveClock :: Int,       -- Increments once per player turn
-              fullMoveClock :: Int,       -- Increments once per W&B turn
+              enPassant :: Maybe Square,  -- Target square of available enPassent
+              halfMoveClock :: Int,       -- Increments once per player turn
               score :: Int                -- Result of the evaluation function
-            }
+            } deriving Show
 
