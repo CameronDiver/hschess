@@ -3,7 +3,6 @@ module Eval where
 import Data.Array
 
 import ChessData
-import Board
 
 -- Board evaluation functions
 evalBoard :: Board -> Int
