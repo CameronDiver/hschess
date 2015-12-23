@@ -48,8 +48,8 @@ sliderPiecePos board (a, b) col (c, d)
 -- leave the player in check which is not legal.
 genMoves :: Board -> Square -> [Board]
 genMoves board pos = if (sliderPiece (ptype piece) == True)
-      then map (movePiece board pos) $ filter (legalBoardPos board col) $ intersect legalSquares $ map (addPos pos) vectors
-      else map (movePiece board pos) $ concatMap (sliderPiecePos board pos col) vectors
+      then map (movePiece board pos) $ concatMap (sliderPiecePos board pos col) vectors
+      else map (movePiece board pos) $ filter (legalBoardPos board col) $ intersect legalSquares $ map (addPos pos) vectors
   where
     legalSquares = (map fst (A.assocs board))
     piece = pieceAt board pos
