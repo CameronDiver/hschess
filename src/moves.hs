@@ -72,3 +72,8 @@ isOppositeColour board col pos = (colour (pieceAt board pos)) /= col
 
 legalBoardPos :: Board -> Colour -> Square -> Bool
 legalBoardPos board col pos = isEmpty board pos || isOppositeColour board col pos
+
+
+nextStates :: GameState -> [GameState]
+nextStates
+  (GameState board sideToMove castling enPassant halfmoveClock score) = undefined
