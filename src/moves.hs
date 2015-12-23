@@ -1,6 +1,8 @@
  module Moves where
 
 import Debug.Trace (traceShow)
+import Data.List (intersect)
+import qualified Data.Array as A
 
 import ChessData
 import Board
@@ -26,18 +28,33 @@ sliderPiece ptype =
     Queen  -> True
     _      -> False
 
+-- if legal position and isnt empty and is opposite colour then can move up to that square
+-- if legal position and isnt empty and is same colour then can move till just before that square
+-- if legal position and is empty then can move into and past that point
+-- if not legal position then cannnot move into that square
+sliderPiecePos :: Board -> Square -> Colour -> Square -> [Square]
+sliderPiecePos board (a, b) col (c, d)
+  | nextSqLegal && isNotEmpty && (isOppositeColour board col nextSq) = [nextSq]
+  | nextSqLegal && isNotEmpty = []
+  | nextSqLegal = nextSq: sliderPiecePos board nextSq col (c, d)
+  | otherwise = []
+  where
+    nextSq = (a+c, b+d)
+    isNotEmpty = (not (isEmpty board nextSq))
+    legSquares = (map fst (A.assocs board))
+    nextSqLegal = nextSq `elem` legSquares
 
 -- Generate pseudo-legal moves, that is, moves that are legal but may
 -- leave the player in check which is not legal.
 genMoves :: Board -> Square -> [Board]
-genMoves board pos = map (movePiece board pos) pslegal
+genMoves board pos = if (sliderPiece (ptype piece) == True)
+      then map (movePiece board pos) $ filter (legalBoardPos board col) $ intersect legalSquares $ map (addPos pos) vectors
+      else map (movePiece board pos) $ concatMap (sliderPiecePos board pos col) vectors
   where
+    legalSquares = (map fst (A.assocs board))
     piece = pieceAt board pos
     col   = colour piece
     vectors = moveVectors $ piece
-    pslegal = filter (legalBoardPos board col) $ filter legalPos $ map (addPos pos) vectors
-    -- TODO: sliding
-
 
 addPos :: Square -> Square -> Square
 addPos (a, b) (c, d) = (a+c, b+d)
