@@ -18,6 +18,8 @@ cabal-version:       >=1.10
 
 executable hschess
   main-is:             chess.hs
+  ghc-options: -O2
+              -threaded
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base < 5 && >= 4.0,
