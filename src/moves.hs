@@ -57,13 +57,13 @@ genMoves g@(GameState b' stm c ep clk s) =
 
 -- Generate moves for a certain piece on a given square
 genMoves' :: GameState -> Square -> Piece -> [GameState]
-genMoves' g@(GameState b'@(Board b) _ c _ ep _) sq p@(Piece ptype _)
+genMoves' g@(GameState b' _ c _ ep _) sq p@(Piece ptype _)
   | sliderPiece ptype = sliderMoveGen g sq p
   | otherwise         = nonSliderMoveGen g sq p
 
 -- Generate moves for pieces that slide
 sliderMoveGen :: GameState -> Square -> Piece -> [GameState]
-sliderMoveGen (GameState b'@(Board b) stm c ep clk s) sq p@(Piece _ col) =
+sliderMoveGen (GameState b' stm c ep clk s) sq p@(Piece _ col) =
   map (makeState (opposite stm) c ep (clk + 1)) moves
   where
     moves = (applyMoves b' sq) (concatMap (sliderPiecePos b' sq col) (moveVectors p))
@@ -72,20 +72,20 @@ sliderMoveGen (GameState b'@(Board b) stm c ep clk s) sq p@(Piece _ col) =
 -- TODO: Make an exception for Pawn, King and Rook to handle enPassent and Castling
 nonSliderMoveGen :: GameState -> Square -> Piece -> [GameState]
 nonSliderMoveGen g sq p@(Piece Pawn _) = genPawnMoves g sq
-nonSliderMoveGen  (GameState b'@(Board b) stm c ep clk s) sq p@(Piece _ col) =
+nonSliderMoveGen  (GameState b' stm c ep clk s) sq p@(Piece _ col) =
   map (makeState (opposite stm) c ep (clk + 1)) moves
   where
     moves        = applyMoves b' sq (filter (legalBoardPos b' col) $ intersect legalSquares vectors)
     vectors      = map (addPos sq) (moveVectors p)
 
 -- TODO: EnPassent
--- Generate only the white pawn moves
 genPawnMoves :: GameState -> Square -> [GameState]
-genPawnMoves (GameState b'@(Board b) stm c ep clk s) sq@(x,y) =
+genPawnMoves g@(GameState b' stm c ep clk s) sq@(x,y) =
   map (makeState (opposite stm) c ep (clk + 1)) moves
   where
-    vectors = map (addPos sq) $ pawnVectors sq stm
+    vectors = (map (addPos sq) $ pawnVectors sq stm) ++ captMoves
     moves   = applyMoves b' sq (filter (legalBoardPos b' stm) $ intersect legalSquares vectors)
+    captMoves = generatePawnCaptures g sq
 
 pawnVectors :: Square -> Colour -> [Square]
 pawnVectors (x,_) White = if x == 6             -- If the pawn is stll on the home row
@@ -94,6 +94,16 @@ pawnVectors (x,_) White = if x == 6             -- If the pawn is stll on the ho
 pawnVectors (x,_) Black = if x == 1
                           then [(1,0), (2,0)]
                           else [(1,0)]
+
+generatePawnCaptures :: GameState -> Square -> [Square]
+generatePawnCaptures g@(GameState b' stm c ep clk s) sq = filter legalPos (avail $ vectors stm)
+  where
+    vectors White = map (addPos sq) [(-1,-1), (-1, 1)]
+    vectors Black = map (addPos sq) [(1, 1), (1, -1)]
+    avail [] = []
+    avail (psq:psqs) = if isOppositeColour b' stm psq -- keep the available potential squares
+                     then psq : avail psqs
+                     else avail psqs
 
 legalSquares :: [Square]
 legalSquares = [(x,y) | x <- [0..7], y <- [0..7]]
@@ -118,7 +128,11 @@ isEmpty :: Board -> Square -> Bool
 isEmpty board pos = pieceAt board pos == Empty
 
 isOppositeColour :: Board -> Colour -> Square -> Bool
-isOppositeColour board col pos = (colour (pieceAt board pos)) /= col
+isOppositeColour board col pos = isOppositeColour' col (pieceAt board pos)
+  where
+    isOppositeColour' :: Colour -> Piece -> Bool
+    isOppositeColour' _ Empty         = False
+    isOppositeColour' c (Piece _ col) = c /= col
 
 legalBoardPos :: Board -> Colour -> Square -> Bool
 legalBoardPos board col pos = isEmpty board pos || isOppositeColour board col pos
