@@ -2,6 +2,8 @@ module Board where
 
 import Data.Array
 import Data.Char (toUpper, ord)
+import qualified Data.Attoparsec.Text as P
+import qualified Data.Text as T
 
 import ChessData
 import FEN
@@ -17,6 +19,11 @@ initialBoard = Board $ listArray ((0,0), (7,7)) initialBoardList
                           replicate 8 Empty ++
                           pawnRowForColour White ++
                           backRowForColour White
+
+initialState :: GameState
+initialState = state
+  where
+    (Right state) = P.parseOnly gameFromFEN (T.pack "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
 pawnRowForColour :: Colour -> [Piece]
 pawnRowForColour c = replicate 8 (Piece Pawn c)
