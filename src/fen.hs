@@ -99,7 +99,7 @@ pieceFromChar c =
     _ -> undefined
 
 boardFromPieceList :: [[Piece]] -> Board
-boardFromPieceList l = listArray ((0,0), (7,7)) $ concat l
+boardFromPieceList l = Board (listArray ((0,0), (7,7)) $ concat l)
 
 
 positionToSquare :: Position -> Square

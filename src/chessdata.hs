@@ -2,6 +2,9 @@ module ChessData where
 
 import Data.Array
 import Data.Maybe
+import Data.List (intersperse, intercalate)
+import Data.Char (toUpper)
+
 
 -- The piece types
 data PieceType = Pawn
@@ -27,7 +30,41 @@ type Square = (Int, Int)
 
 -- The board types
 type Position = String
-type Board = Array Square Piece
+newtype Board = Board ( Array Square Piece )
+
+-- Board printing
+-- Print board
+instance Show Board where
+  show (Board b) = showBoard $ Board b
+
+-- Pretty print a board
+showBoard :: Board -> String
+showBoard (Board b) = "\n" ++ intercalate "\n"
+  (map showLine [0..7]) ++ "\n   - - - - - - - -\n   a b c d e f g h\n"
+  where
+    showLine :: Int -> String
+    showLine i   =  (show (8-i)) ++ "| " ++
+      intersperse ' ' (map showPiece (map (getPiece i) [j | j <- [0..7]]))
+    getPiece i j = b ! (i, j)
+
+
+-- Make a character from a piece, taking into account colour
+showPiece :: Piece -> Char
+showPiece (Piece ptype col)
+  | col == White  = toUpper $ showPiece' ptype
+  | otherwise     = showPiece' ptype
+showPiece Empty   = '.'
+
+showPiece' :: PieceType -> Char
+showPiece' ptype =
+  case ptype of
+    Pawn   -> 'p'
+    Knight -> 'n'
+    Bishop -> 'b'
+    Rook   -> 'r'
+    Queen  -> 'q'
+    King   -> 'k'
+
 
 -- Represent casting rights
 data CastlingRight = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
@@ -43,5 +80,13 @@ data GameState =
               enPassant :: Maybe Square,  -- Target square of available enPassent
               halfMoveClock :: Int,       -- Increments once per player turn
               score :: Int                -- Result of the evaluation function
-            } deriving Show
+            }
+
+instance Show GameState where
+  show (GameState b stm c ep clk s) =
+    show b ++ "\nSide to Move: " ++ show stm
+    ++ "\nCastling Rights: " ++ show c
+    ++ "\nEn passent info: " ++ show ep
+    ++ "\nHalf-Move Count: " ++ show clk
+    ++ "\nBoard eval: " ++ show s ++ "\n"
 

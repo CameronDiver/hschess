@@ -6,7 +6,7 @@ import ChessData
 
 -- Board evaluation functions
 evalBoard :: Board -> Int
-evalBoard board =  sum $ [pieceScoreWithCol $ board ! (x, y) | x <- [0..7], y <- [0..7]]
+evalBoard (Board board) =  sum $ [pieceScoreWithCol $ board ! (x, y) | x <- [0..7], y <- [0..7]]
 
 -- Piece evaluation functions
 pieceScoreWithCol :: Piece -> Int

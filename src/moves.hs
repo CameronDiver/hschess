@@ -33,28 +33,29 @@ sliderPiece ptype =
 -- if legal position and is empty then can move into and past that point
 -- if not legal position then cannnot move into that square
 sliderPiecePos :: Board -> Square -> Colour -> Square -> [Square]
-sliderPiecePos board (a, b) col (c, d)
-  | nextSqLegal && isNotEmpty && (isOppositeColour board col nextSq) = [nextSq]
-  | nextSqLegal && isNotEmpty = []
-  | nextSqLegal = nextSq: sliderPiecePos board nextSq col (c, d)
-  | otherwise = []
+sliderPiecePos b'@(Board board) (a, b) col (c, d)
+  | nextSqLegal && isNotEmpty && opCol = [nextSq]
+  | nextSqLegal && isNotEmpty          = []
+  | nextSqLegal                        = nextSq: sliderPiecePos b' nextSq col (c, d)
+  | otherwise                          = []
   where
-    nextSq = (a+c, b+d)
-    isNotEmpty = (not (isEmpty board nextSq))
-    legSquares = (map fst (A.assocs board))
+    nextSq      = (a+c, b+d)
+    isNotEmpty  = (not (isEmpty b' nextSq))
+    legSquares  = (map fst (A.assocs board))
     nextSqLegal = nextSq `elem` legSquares
+    opCol       = (isOppositeColour b' col nextSq)
 
 -- Generate pseudo-legal moves, that is, moves that are legal but may
 -- leave the player in check which is not legal.
 genMoves :: Board -> Square -> [Board]
-genMoves board pos = if (sliderPiece (ptype piece) == True)
-      then map (movePiece board pos) $ concatMap (sliderPiecePos board pos col) vectors
-      else map (movePiece board pos) $ filter (legalBoardPos board col) $ intersect legalSquares $ map (addPos pos) vectors
+genMoves b'@(Board board) pos = if (sliderPiece (ptype piece) == True)
+      then map (movePiece b' pos) $ concatMap (sliderPiecePos b' pos col) vectors
+      else map (movePiece b' pos) $ filter (legalBoardPos b' col) $ intersect legalSquares $ map (addPos pos) vectors
   where
     legalSquares = (map fst (A.assocs board))
-    piece = pieceAt board pos
-    col   = colour piece
-    vectors = moveVectors $ piece
+    piece        = pieceAt b' pos
+    col          = colour piece
+    vectors      = moveVectors $ piece
 
 addPos :: Square -> Square -> Square
 addPos (a, b) (c, d) = (a+c, b+d)
