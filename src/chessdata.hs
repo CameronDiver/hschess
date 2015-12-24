@@ -19,6 +19,10 @@ data PieceType = Pawn
 data Colour = White
             | Black
             deriving ( Show, Eq )
+                     
+opposite :: Colour -> Colour
+opposite White = Black
+opposite Black = White
 
 -- Combination of piece and it's colour
 data Piece = Piece { ptype::PieceType, colour::Colour }
