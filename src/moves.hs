@@ -3,6 +3,7 @@
 import Debug.Trace (traceShow)
 import Data.List (intersect)
 import qualified Data.Array as A
+import Data.Sequence
 
 import ChessData
 import Board
@@ -28,6 +29,34 @@ sliderPiece ptype =
     Queen  -> True
     _      -> False
 
+
+isOppositeColour :: Board -> Colour -> Square -> Bool
+isOppositeColour board col pos = isOppositeColour' col (pieceAt board pos)
+  where
+    isOppositeColour' :: Colour -> Piece -> Bool
+    isOppositeColour' _ Empty         = False
+    isOppositeColour' c (Piece _ col) = c /= col
+
+-- List of legal square positions on the chess board
+legalSquares :: [Square]
+legalSquares = [(x,y) | x <- [0..7], y <- [0..7]]
+
+-- A helper function which builds up a GameState with the board as the last arg
+-- It also swaps the stm
+makeState :: Colour -> CastlingRights -> Maybe Square -> Int -> Board -> GameState
+makeState c cr ep clk b = GameState b (opposite c) cr ep clk (evalBoard b)
+
+addPos :: Square -> Square -> Square
+addPos (a, b) (c, d) = (a+c, b+d)
+
+-- Just do bounds checking for the time being
+legalPos :: Square -> Bool
+legalPos (a, b) = a >= 0 && a <= 7 && b >= 0 && b <= 7
+
+-- Is that position on the board empty?
+isEmpty :: Board -> Square -> Bool
+isEmpty board pos = pieceAt board pos == Empty
+
 -- if legal position and isnt empty and is opposite colour then can move up to that square
 -- if legal position and isnt empty and is same colour then can move till just before that square
 -- if legal position and is empty then can move into and past that point
@@ -45,95 +74,74 @@ sliderPiecePos b'@(Board board) (a, b) col (c, d)
     nextSqLegal = nextSq `elem` legSquares
     opCol       = (isOppositeColour b' col nextSq)
 
--- Generate pseudo-legal moves, that is, moves that are legal but may
--- leave the player in check which is not legal.
-genMoves :: GameState -> [GameState]
-genMoves g@(GameState b' stm c ep clk s) =
-  concatMap gen pieceSqs
-  where
-    gen :: (Square, Piece) -> [GameState]
-    gen (sq, p) = genMoves' g sq p
-    pieceSqs    = piecesByColour b' stm
-
--- Generate moves for a certain piece on a given square
-genMoves' :: GameState -> Square -> Piece -> [GameState]
-genMoves' g@(GameState b' _ c _ ep _) sq p@(Piece ptype _)
-  | sliderPiece ptype = sliderMoveGen g sq p
-  | otherwise         = nonSliderMoveGen g sq p
-
--- Generate moves for pieces that slide
-sliderMoveGen :: GameState -> Square -> Piece -> [GameState]
-sliderMoveGen (GameState b' stm c ep clk s) sq p@(Piece _ col) =
-  map (makeState (opposite stm) c ep (clk + 1)) moves
-  where
-    moves = (applyMoves b' sq) (concatMap (sliderPiecePos b' sq col) (moveVectors p))
-
--- Generate moves for pieces that don't slide
--- TODO: Make an exception for Pawn, King and Rook to handle enPassent and Castling
-nonSliderMoveGen :: GameState -> Square -> Piece -> [GameState]
-nonSliderMoveGen g sq p@(Piece Pawn _) = genPawnMoves g sq
-nonSliderMoveGen  (GameState b' stm c ep clk s) sq p@(Piece _ col) =
-  map (makeState (opposite stm) c ep (clk + 1)) moves
-  where
-    moves        = applyMoves b' sq (filter (legalBoardPos b' col) $ intersect legalSquares vectors)
-    vectors      = map (addPos sq) (moveVectors p)
-
--- TODO: EnPassent
-genPawnMoves :: GameState -> Square -> [GameState]
-genPawnMoves g@(GameState b' stm c ep clk s) sq@(x,y) =
-  map (makeState (opposite stm) c ep (clk + 1)) moves
-  where
-    vectors = (map (addPos sq) $ pawnVectors sq stm) ++ captMoves
-    moves   = applyMoves b' sq (filter (legalBoardPos b' stm) $ intersect legalSquares vectors)
-    captMoves = generatePawnCaptures g sq
-
-pawnVectors :: Square -> Colour -> [Square]
-pawnVectors (x,_) White = if x == 6             -- If the pawn is stll on the home row
-                          then [(-1,0), (-2,0)] -- x and y are mixed up here, investigate...
-                          else [(-1,0)]
+pawnVectors :: Square -> Colour -> Seq Square
+pawnVectors (x,_) White = if x == 6                        -- If the pawn is stll on the home row
+                          then empty |> (-1,0) |> (-2,0) -- x and y are mixed up here, investigate...
+                          else empty |> (-1,0)
 pawnVectors (x,_) Black = if x == 1
-                          then [(1,0), (2,0)]
-                          else [(1,0)]
+                          then empty |> (1,0) |> (2,0)
+                          else empty |> (1,0)
 
-generatePawnCaptures :: GameState -> Square -> [Square]
-generatePawnCaptures g@(GameState b' stm c ep clk s) sq = filter legalPos (avail $ vectors stm)
+
+-- Generate all pseudo-legal moves from a given board position and SideToMove
+genMoves :: GameState -> Seq GameState
+genMoves g@(GameState b' stm c ep clk s) = concatSeq (stdMoves g) pieces
   where
-    vectors White = map (addPos sq) [(-1,-1), (-1, 1)]
-    vectors Black = map (addPos sq) [(1, 1), (1, -1)]
-    avail [] = []
-    avail (psq:psqs) = if isOppositeColour b' stm psq -- keep the available potential squares
-                     then psq : avail psqs
-                     else avail psqs
+    pieces = fromList $ piecesByColour b' stm
 
-legalSquares :: [Square]
-legalSquares = [(x,y) | x <- [0..7], y <- [0..7]]
 
--- A helper function which builds up a GameState with the board as the last arg
-makeState :: Colour -> CastlingRights -> Maybe Square -> Int -> Board -> GameState
-makeState c cr ep clk b = GameState b c cr ep clk (evalBoard b)
+-- Get all standard moves, that is moves which aren't enpassent, castling, or pawn
+-- moves
+stdMoves :: GameState -> (Square, Piece) -> Seq GameState
+stdMoves g@(GameState b' stm c ep clk s) fromPiece@(_, (Piece ptype _))=
+  if sliderPiece ptype
+  then genSliderMoves g fromPiece
+  else genNonSliderMoves g fromPiece
 
--- Apply a list of moves to the board
-applyMoves :: Board -> Square -> [Square]  -> [Board]
-applyMoves b pos = map $ movePiece b pos
-
-addPos :: Square -> Square -> Square
-addPos (a, b) (c, d) = (a+c, b+d)
-
--- Just do bounds checking for the time being
-legalPos :: Square -> Bool
-legalPos (a, b) = a >= 0 && a <= 7 && b >= 0 && b <= 7
-
--- Is that position on the board empty?
-isEmpty :: Board -> Square -> Bool
-isEmpty board pos = pieceAt board pos == Empty
-
-isOppositeColour :: Board -> Colour -> Square -> Bool
-isOppositeColour board col pos = isOppositeColour' col (pieceAt board pos)
+-- Generate the slider moves for pieces
+genSliderMoves :: GameState -> (Square, Piece) -> Seq GameState
+genSliderMoves g@(GameState b' stm c ep clk s) fromPiece@(sq, p@(Piece ptype _)) =
+  fmap (makeState stm c ep clk) $ applyMoves b' sq (concatSeq (slide b' sq stm) vects)
   where
-    isOppositeColour' :: Colour -> Piece -> Bool
-    isOppositeColour' _ Empty         = False
-    isOppositeColour' c (Piece _ col) = c /= col
+    vects = fromList $ moveVectors p
 
-legalBoardPos :: Board -> Colour -> Square -> Bool
-legalBoardPos board col pos = isEmpty board pos || isOppositeColour board col pos
+genNonSliderMoves :: GameState -> (Square, Piece) -> Seq GameState
+genNonSliderMoves g@(GameState b' stm c ep clk s) fromPiece@(sq, p@(Piece ptype _))
+  | ptype == Pawn = genPawnMoves g sq
+  | otherwise     = fmap (makeState stm c ep clk) $
+    applyMoves b' sq $ Data.Sequence.filter (checkSq b') (fmap (addPos sq) $ fromList $ moveVectors p)
+  where
+    checkSq :: Board -> Square -> Bool
+    checkSq b' sq
+      | legalPos sq = if isOppositeColour b' stm sq || isEmpty b' sq
+                      then True else False
+      | otherwise   = False
 
+
+slide :: Board -> Square -> Colour -> (Int, Int) -> Seq Square
+slide b' sq col vec = fromList $ sliderPiecePos b' sq col vec
+
+-- Apply a list of moves to a board
+applyMoves :: Board -> Square -> Seq Square -> Seq Board
+applyMoves b' sq = fmap $ movePiece b' sq
+
+-- Helper function for sequence
+concatSeq :: (a -> Seq b) -> Seq a -> Seq b
+concatSeq = foldMap
+
+
+genPawnMoves :: GameState -> Square -> Seq GameState
+genPawnMoves g@(GameState b' stm c ep clk s) sq =
+  fmap (makeState stm c ep clk) $ applyMoves b' sq $ (stdPawnMoves >< pawnCaptures)
+  where
+    stdPawnMoves = fmap (addPos sq) $ pawnVectors sq stm
+    pawnCaptures = genPawnCaptures g sq
+
+
+genPawnCaptures :: GameState -> Square -> Seq Square
+genPawnCaptures g@(GameState b' stm c ep clk s) sq = avail (Data.Sequence.filter legalPos $ vectors stm)
+  where
+    vectors White = fmap (addPos sq) $ empty |> (-1,-1) |> (-1, 1)
+    vectors Black = fmap (addPos sq) $ empty |> (1, 1) |>  (1, -1)
+    avail :: Seq Square -> Seq Square
+    avail sqs = Data.Sequence.filter (isOppositeColour b' stm) sqs -- keep the available potential squares
