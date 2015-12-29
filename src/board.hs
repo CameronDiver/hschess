@@ -25,6 +25,11 @@ initialState = state
   where
     (Right state) = P.parseOnly gameFromFEN (T.pack "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
+stateFromFEN :: String -> GameState
+stateFromFEN fen = state
+  where
+    (Right state) = P.parseOnly gameFromFEN $ T.pack fen
+
 pawnRowForColour :: Colour -> [Piece]
 pawnRowForColour c = replicate 8 (Piece Pawn c)
 
