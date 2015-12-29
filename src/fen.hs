@@ -5,6 +5,7 @@ import qualified Data.Attoparsec.Text as P
 import qualified Data.Text as T
 import Data.Array
 import Data.Word
+import Data.List
 import Debug.Trace (traceShow)
 
 import ChessData
@@ -57,7 +58,7 @@ strToRights (c:cs) = charToRight c : strToRights cs
 
 strToEnPassent :: String -> Maybe Square
 strToEnPassent "-" = Nothing
-strToEnPassent pos = Just $ positionToSquare pos
+strToEnPassent pos = Just $ positionToTuple pos
 
 -- Given the initial part of a FEN string, return the board position
 --Note:  needs to be reversed
@@ -99,12 +100,4 @@ pieceFromChar c =
     _ -> undefined
 
 boardFromPieceList :: [[Piece]] -> Board
-boardFromPieceList l = Board (listArray ((0,0), (7,7)) $ concat l)
-
-
-positionToSquare :: Position -> Square
-positionToSquare (a:b:[]) = (fileToN a, rowToN $ read [b])
-  where
-    fileToN f            = (ord f) - (ord 'a')
-    rowToN n             = n - 1
-positionToSquare _        = undefined
+boardFromPieceList l = Board (listArray ((0,0), (7,7)) $ concat $ Data.List.transpose l)
