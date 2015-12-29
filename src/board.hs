@@ -1,7 +1,7 @@
 module Board where
 
 import Data.Array
-import Data.Char (toUpper, ord)
+import Data.Char (toUpper)
 import qualified Data.Attoparsec.Text as P
 import qualified Data.Text as T
 
@@ -38,14 +38,6 @@ setBoardCell (Board board) pos p = Board $ board // [(pos, p)]
 
 pieceAt :: Board -> Square -> Piece
 pieceAt (Board board) pos = board ! pos
-
-positionToTuple :: Position -> Square
-positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
-  where
-    fileToN f            = (ord f) - (ord 'a')
-    rowToN n             = n - 1
-positionToTuple _        = undefined
-
 
 tupleToPosition :: Square -> Position
 tupleToPosition (a, b) = (toEnum (fromEnum 'a' + (7 - b))) : show (a + 1)

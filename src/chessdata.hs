@@ -3,7 +3,7 @@ module ChessData where
 import Data.Array
 import Data.Maybe
 import Data.List (intersperse, intercalate)
-import Data.Char (toUpper)
+import Data.Char (toUpper, ord)
 
 
 -- The piece types
@@ -19,7 +19,7 @@ data PieceType = Pawn
 data Colour = White
             | Black
             deriving ( Show, Eq )
-                     
+
 opposite :: Colour -> Colour
 opposite White = Black
 opposite Black = White
@@ -49,7 +49,7 @@ showBoard (Board b) = "\n" ++ intercalate "\n"
     showLine :: Int -> String
     showLine i   =  (show (8-i)) ++ "| " ++
       intersperse ' ' (map showPiece (map (getPiece i) [j | j <- [0..7]]))
-    getPiece i j = b ! (i, j)
+    getPiece i j = b ! (j, i)
 
 
 -- Make a character from a piece, taking into account colour
@@ -94,3 +94,16 @@ instance Show GameState where
     ++ "\nHalf-Move Count: " ++ show clk
     ++ "\nBoard eval: " ++ show s ++ "\n"
 
+
+-- The following 2 functions are the same, one is only kept for now
+-- until all references to it are gone TODO: This
+positionToTuple :: Position -> Square
+positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
+  where
+    fileToN f            = (ord f) - (ord 'a')
+    rowToN n             = 7 - (n - 1)
+positionToTuple _        = undefined
+
+
+positionToSquare :: Position -> Square
+positionToSquare = positionToTuple
