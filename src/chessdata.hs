@@ -36,6 +36,14 @@ type Square = (Int, Int)
 type Position = String
 newtype Board = Board ( Array Square Piece )
 
+-- A structure to hold information about a move
+data Move = Move { fromSq::Square,        -- The square the piece is moving from
+                   toSq::Square,          -- The destination sq
+                   piece::Piece,          -- The piece moving
+                   promotion::Maybe Piece -- Is this a pawn promotion?
+                                          -- and if so what is the toPiece
+                 } deriving Show
+
 -- Board printing
 -- Print board
 instance Show Board where
