@@ -186,7 +186,7 @@ makeGeneralMove g@(GameState b' stm c ep clk s) move@(Move fromSq toSq@(x,y) (Pi
     castling = [] -- This is not a castling move (handled elsewhere)
     ep       = enPassentSq move
     clk      = clk + 1
-    s        = evalBoard board
+    s        = evalState next board
 
 enPassentSq :: Move -> Maybe Square
 enPassentSq (Move (x,y) (_,y') (Piece ptype _) _)

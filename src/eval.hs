@@ -4,6 +4,14 @@ import Data.Array
 
 import ChessData
 
+
+evalState :: Colour -> Board -> Int
+evalState stm b
+  | stm == White = score
+  | otherwise    = -score
+  where
+    score = evalBoard b
+
 -- Board evaluation functions
 evalBoard :: Board -> Int
 evalBoard (Board board) =  sum $ [pieceScoreWithCol $ board ! (x, y) | x <- [0..7], y <- [0..7]]

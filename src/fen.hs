@@ -30,7 +30,7 @@ gameFromFEN =
       castling = (strToRights $ T.unpack castling),
       enPassant = (strToEnPassent $ T.unpack enpassent),
       halfMoveClock = halfClock,
-      score = evalBoard board
+      score = evalState (stmToCol $ T.unpack stm) board
       }
 
 notSpace :: Char -> Bool
