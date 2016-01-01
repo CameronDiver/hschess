@@ -19,7 +19,7 @@ isSqAttacked g sq c = sliders || pawns || nsliders
 
 -- Does the current game state have the king sq attacked?
 isInCheck :: GameState -> Bool
-isInCheck g@(GameState b stm _ _ _ _) = isSqAttacked g sq stm
+isInCheck g@(GameState b stm _ _ _ _ _) = isSqAttacked g sq stm
   where
     (Just (sq,_)) = find ((== King).ptype.snd) (piecesByColour b (opposite stm))
 
@@ -49,7 +49,7 @@ sliderPieceAttacking' g pcs sq =
   map (\(_,p) -> sliderPieceAttacking g p pcs sq) pcs
 
 sliderPieceAttacking :: GameState -> Piece -> [(Square, Piece)] -> Square -> Bool
-sliderPieceAttacking (GameState b _ _ _ _ _) p@(Piece ptype col) pieces sq =
+sliderPieceAttacking (GameState b _ _ _ _ _ _) p@(Piece ptype col) pieces sq =
   any isJust candidates
   where
     ps         = filterPieces ptype pieces
