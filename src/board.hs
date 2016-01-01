@@ -44,10 +44,6 @@ setBoardCell (Board board) pos p = Board $ board // [(pos, p)]
 pieceAt :: Board -> Square -> Piece
 pieceAt (Board board) pos = board ! pos
 
-tupleToPosition :: Square -> Position
-tupleToPosition (a, b) = (toEnum (fromEnum 'a' + (7 - b))) : show (a + 1)
-
-
 movePieceByPos :: Board -> Position -> Position -> Board
 movePieceByPos board p1 p2 = movePiece board (positionToSquare p1) (positionToSquare p2)
 
