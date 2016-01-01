@@ -15,7 +15,7 @@ import Query
 
 -- Generate all pseudo-legal moves from a given board position and SideToMove
 genMoves :: GameState -> Seq GameState
-genMoves g@(GameState b' stm c ep clk s) = S.filter (not.isInCheck) pslegal
+genMoves g@(GameState b' stm c ep clk s _) = S.filter (not.isInCheck) pslegal
   where
     pieces = fromList $ piecesByColour b' stm
     enPassents = genEnPassentMoves g
@@ -25,21 +25,21 @@ genMoves g@(GameState b' stm c ep clk s) = S.filter (not.isInCheck) pslegal
 -- Get all standard moves, that is moves which aren't enpassent, castling, or pawn
 -- moves
 stdMoves :: GameState -> (Square, Piece) -> Seq GameState
-stdMoves g@(GameState b' stm c ep clk s) fromPiece@(_, Piece ptype _)=
+stdMoves g@(GameState b' stm c ep clk s _) fromPiece@(_, Piece ptype _)=
   if sliderPiece ptype
   then genSliderMoves g fromPiece
   else genNonSliderMoves g fromPiece
 
 -- Generate the slider moves for pieces
 genSliderMoves :: GameState -> (Square, Piece) -> Seq GameState
-genSliderMoves g@(GameState b' stm c ep clk s) fromPiece@(sq, p@(Piece ptype _)) =
+genSliderMoves g@(GameState b' stm c ep clk s _) fromPiece@(sq, p@(Piece ptype _)) =
   fmap (makeMove g) moves
   where
     vects = fromList $ concatMap (sliderPiecePos b' sq stm) $ moveVectors p
     moves = fmap (\x -> Move sq x p Nothing) vects
 
 genNonSliderMoves :: GameState -> (Square, Piece) -> Seq GameState
-genNonSliderMoves g@(GameState b' stm c ep clk s) fromPiece@(sq, p@(Piece ptype _))
+genNonSliderMoves g@(GameState b' stm c ep clk s _) fromPiece@(sq, p@(Piece ptype _))
   | ptype == Pawn = genPawnMoves g sq
   | otherwise     = fmap (makeMove g) moves
   where
@@ -53,17 +53,23 @@ concatSeq :: (a -> Seq b) -> Seq a -> Seq b
 concatSeq = foldMap
 
 genPawnMoves :: GameState -> Square -> Seq GameState
-genPawnMoves g@(GameState b' stm c ep clk s) sq = fmap (makeMove g) moves
+genPawnMoves g@(GameState b' stm c ep clk s _) sq@(a,b) = fmap (makeMove g) moves
   where -- TODO: Handle promotion
-    moves        = fmap (\x -> Move sq x (Piece Pawn stm) Nothing)
-      (stdPawnMoves >< pawnCaptures)
-    stdPawnMoves    = S.filter checkSqPawn (addPos sq <$> pawnVectors sq stm)
-    pawnCaptures    = genPawnCaptures g sq
-    checkSqPawn psq = legalPos psq && isEmpty b' psq
+    moves                     = fmap (\x -> Move sq x (Piece Pawn stm) Nothing) allMoves
+    allMoves                  = (stdPawnMoves >< pawnCaptures)
+    stdPawnMoves              = S.filter legalDoubleMove stdCandidates
+    stdCandidates             = S.filter checkSqPawn (addPos sq <$> pawnVectors sq stm)
+    pawnCaptures              = genPawnCaptures g sq
+    checkSqPawn psq           = legalPos psq && isEmpty b' psq
+    legalDoubleMove sq'@(c,d) = if abs (b-d) == 2
+                                then checkSqPawn (c, d + colToDir stm)
+                                else True
+    colToDir White            = 1
+    colToDir Black            = -1
 
 
 genPawnCaptures :: GameState -> Square -> Seq Square
-genPawnCaptures g@(GameState b' stm c ep clk s) sq
+genPawnCaptures g@(GameState b' stm c ep clk s _) sq
   = avail (S.filter legalPos $ pawnAttackVectors stm sq)
   where
     -- keep the available potential squares
@@ -72,7 +78,7 @@ genPawnCaptures g@(GameState b' stm c ep clk s) sq
 
 
 genEnPassentMoves :: GameState -> Seq GameState
-genEnPassentMoves g@(GameState b' stm c ep clk s)
+genEnPassentMoves g@(GameState b' stm c ep clk s _)
   | isNothing ep = S.empty
   | otherwise    = fromList $ fmap (\x -> makeMove g (Move (fst x) epSq (snd x) Nothing)) candidates
     where
@@ -87,28 +93,28 @@ genEnPassentMoves g@(GameState b' stm c ep clk s)
 -- It will also reverse the side to move, and setup castling and enpassent rights,
 -- and also increment the half-move clock
 makeMove :: GameState -> Move -> GameState
-makeMove g@(GameState b' stm c ep clk s) move@(Move fromSq toSq (Piece ptype _) promo)
+makeMove g move
   | isJust $ enPassentSq move = makeEnPassentMove g move
   | otherwise                 = makeGeneralMove g move
 
 -- When making an en passent move, the pawn moves normally, but an extra piece
 -- must be removed
 makeEnPassentMove :: GameState -> Move -> GameState
-makeEnPassentMove g@(GameState b' stm c ep clk s) (Move fromSq toSq@(x,y) (Piece ptype _) _)
+makeEnPassentMove g@(GameState b' stm c ep clk s _) m@(Move fromSq toSq@(x,y) (Piece ptype _) _)
   = do
     -- Move the attacking piece
     let b1 = movePiece b' fromSq toSq
     -- Take the enPassent victim
     let b2 = setBoardCell b1 pos Empty
     -- Return a new state
-    GameState b2 (opposite stm) c Nothing (clk+1) $ evalState stm b2 
+    GameState b2 (opposite stm) c Nothing (clk+1) (evalState stm b2) (Just m)
       where
         pos | stm == White = (x, y+1)
             | otherwise    = (x, y-1)
 
 makeGeneralMove :: GameState -> Move -> GameState
-makeGeneralMove g@(GameState b' stm c ep clk s) move@(Move fromSq toSq@(x,y) (Piece ptype _) _)
-  = GameState board next castling ep nclk s
+makeGeneralMove g@(GameState b' stm c ep clk s _) move@(Move fromSq toSq@(x,y) (Piece ptype _) _)
+  = GameState board next castling ep nclk s m
   where
     board    = movePiece b' fromSq toSq
     next     = opposite stm
@@ -116,6 +122,7 @@ makeGeneralMove g@(GameState b' stm c ep clk s) move@(Move fromSq toSq@(x,y) (Pi
     ep       = enPassentSq move
     nclk     = clk + 1
     s        = evalState next board
+    m        = Just move
 
 enPassentSq :: Move -> Maybe Square
 enPassentSq (Move (x,y) (_,y') (Piece ptype _) _)

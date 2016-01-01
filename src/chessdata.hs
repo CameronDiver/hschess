@@ -3,7 +3,7 @@ module ChessData where
 import Data.Array
 import Data.Maybe
 import Data.List (intersperse, intercalate)
-import Data.Char (toUpper, ord)
+import Data.Char (toUpper, ord, chr)
 
 
 -- The piece types
@@ -42,7 +42,10 @@ data Move = Move { fromSq::Square,        -- The square the piece is moving from
                    piece::Piece,          -- The piece moving
                    promotion::Maybe Piece -- Is this a pawn promotion?
                                           -- and if so what is the toPiece
-                 } deriving Show
+                 }
+
+instance Show Move where
+  show (Move fsq tsq _ _) = squareToPosition fsq ++ squareToPosition tsq
 
 -- Board printing
 -- Print board
@@ -91,16 +94,21 @@ data GameState =
               castling :: CastlingRights, -- The available castling rights
               enPassant :: Maybe Square,  -- Target square of available enPassent
               halfMoveClock :: Int,       -- Increments once per player turn
-              score :: Int                -- Result of the evaluation function
+              score :: Int,               -- Result of the evaluation function
+              move :: Maybe Move          -- The move which led to this position
             }
 
 instance Show GameState where
-  show (GameState b stm c ep clk s) =
+  show (GameState b stm c ep clk s mv) =
     show b ++ "\nSide to Move: " ++ show stm
     ++ "\nCastling Rights: " ++ show c
     ++ "\nEn passent info: " ++ show ep
     ++ "\nHalf-Move Count: " ++ show clk
-    ++ "\nBoard eval: " ++ show s ++ "\n"
+    ++ "\nBoard eval: " ++ show s
+    ++ "\nLast move: " ++ move
+    where
+      move | isJust mv = show $ fromJust mv
+           | otherwise = "-"
 
 positionToSquare :: Position -> Square
 positionToSquare (a:b:[]) = (fileToN a, rowToN $ read [b])
@@ -108,3 +116,6 @@ positionToSquare (a:b:[]) = (fileToN a, rowToN $ read [b])
     fileToN f            = (ord f) - (ord 'a')
     rowToN n             = 7 - (n - 1)
 positionToSquare _        = undefined
+
+squareToPosition :: Square -> Position
+squareToPosition (x,y) = chr ((ord 'a') + x) : show (8-y)

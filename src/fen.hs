@@ -25,12 +25,13 @@ gameFromFEN =
     P.skipSpace
     halfClock <- P.decimal              -- half move clock
     return $ GameState {
-      board = board,
-      sideToMove = (stmToCol $ T.unpack stm),
-      castling = (strToRights $ T.unpack castling),
-      enPassant = (strToEnPassent $ T.unpack enpassent),
+      board         = board,
+      sideToMove    = (stmToCol $ T.unpack stm),
+      castling      = (strToRights $ T.unpack castling),
+      enPassant     = (strToEnPassent $ T.unpack enpassent),
       halfMoveClock = halfClock,
-      score = evalState (stmToCol $ T.unpack stm) board
+      score         = evalState (stmToCol $ T.unpack stm) board,
+      move          = Nothing
       }
 
 notSpace :: Char -> Bool
