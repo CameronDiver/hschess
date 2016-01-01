@@ -23,7 +23,7 @@ searchToDepth :: Int -> GameState -> GameState
 searchToDepth depth st = snd bestMove
     where
       bestMove              = maximumBy (comparing fst) moveScores
-      moveScores            = [(-(minimax (depth-1) c), state c) | c <- children] :: [(Int, GameState)]
+      moveScores            = [(-(minimax (depth-1) c), state c) | c <- children]
       (GameTree _ children) = createTree st
 
 minimax :: Int -> GameTree -> Int
@@ -34,6 +34,29 @@ minimax depth (GameTree st children)
                  else maximum scores
   where
     scores = map (negate.minimax (depth-1)) children
+
+alphaBetaSearch :: Int -> GameState -> GameState
+alphaBetaSearch d st = snd bestMove
+  where
+    (GameTree _ children) = createTree st
+    moves = [(alphaBeta (d-1) c, state c) | c <- children]
+    bestMove = maximumBy (comparing fst) moves
+
+
+alphaBeta :: Int -> GameTree -> Int
+alphaBeta d t@(GameTree st children) = alphaBeta' d (-eval) (eval) t
+    where
+      eval = score st
+      alphaBeta' :: Int -> Int -> Int -> GameTree -> Int
+      alphaBeta' d' alpha beta (GameTree st' children')
+        | d' == 0 = score st'
+        | otherwise = fst (foldl' sub (alpha, beta) children)
+        where
+          sub :: (Int,Int) -> GameTree -> (Int, Int)
+          sub (alpha,beta) n
+            | alpha >= beta = (alpha, beta)
+            | otherwise     = (max alpha $
+                               negate (alphaBeta' (d-1) (negate beta) (negate alpha) n), beta)
 
 createTree :: GameState -> GameTree
 createTree state = GameTree state $ children state
