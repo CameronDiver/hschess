@@ -58,7 +58,7 @@ strToRights (c:cs) = charToRight c : strToRights cs
 
 strToEnPassent :: String -> Maybe Square
 strToEnPassent "-" = Nothing
-strToEnPassent pos = Just $ positionToTuple pos
+strToEnPassent pos = Just $ positionToSquare pos
 
 -- Given the initial part of a FEN string, return the board position
 --Note:  needs to be reversed

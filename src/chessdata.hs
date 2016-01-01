@@ -102,16 +102,9 @@ instance Show GameState where
     ++ "\nHalf-Move Count: " ++ show clk
     ++ "\nBoard eval: " ++ show s ++ "\n"
 
-
--- The following 2 functions are the same, one is only kept for now
--- until all references to it are gone TODO: This
-positionToTuple :: Position -> Square
-positionToTuple (a:b:[]) = (fileToN a, rowToN $ read [b])
+positionToSquare :: Position -> Square
+positionToSquare (a:b:[]) = (fileToN a, rowToN $ read [b])
   where
     fileToN f            = (ord f) - (ord 'a')
     rowToN n             = 7 - (n - 1)
-positionToTuple _        = undefined
-
-
-positionToSquare :: Position -> Square
-positionToSquare = positionToTuple
+positionToSquare _        = undefined

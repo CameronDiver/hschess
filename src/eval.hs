@@ -14,7 +14,8 @@ evalState stm b
 
 -- Board evaluation functions
 evalBoard :: Board -> Int
-evalBoard (Board board) =  sum $ [pieceScoreWithCol $ board ! (x, y) | x <- [0..7], y <- [0..7]]
+evalBoard (Board board) =
+  sum $ [pieceScoreWithCol $ board ! (x, y) | x <- [0..7], y <- [0..7]]
 
 -- Piece evaluation functions
 pieceScoreWithCol :: Piece -> Int

@@ -33,7 +33,7 @@ minimax depth (GameTree st children)
                  then -1000
                  else maximum scores
   where
-    scores = map (negate.(minimax (depth-1))) children
+    scores = map (negate.minimax (depth-1)) children
 
 createTree :: GameState -> GameTree
 createTree state = GameTree state $ children state

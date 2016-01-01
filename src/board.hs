@@ -49,7 +49,7 @@ tupleToPosition (a, b) = (toEnum (fromEnum 'a' + (7 - b))) : show (a + 1)
 
 
 movePieceByPos :: Board -> Position -> Position -> Board
-movePieceByPos board p1 p2 = movePiece board (positionToTuple p1) (positionToTuple p2)
+movePieceByPos board p1 p2 = movePiece board (positionToSquare p1) (positionToSquare p2)
 
 
 movePiece :: Board -> Square -> Square -> Board
@@ -64,4 +64,5 @@ piecesByColour (Board board) col = filter (isCol col) [((x, y), board ! (x,y)) |
     isCol :: Colour -> (Square, Piece) -> Bool
     isCol c (_, Empty)                = False
     isCol c (_, (Piece ptype colour)) = colour == c
+
 
