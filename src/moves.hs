@@ -130,3 +130,14 @@ enPassentSq (Move (x,y) (_,y') (Piece ptype _) _)
                     then Just (x, (y+y') `quot` 2 )
                     else Nothing
   | otherwise     = Nothing
+
+
+-- Helper function for when testing in ghci
+stMakeMove :: GameState -> String -> GameState
+stMakeMove st mvString = makeMove st (Move fromSq toSq p promo)
+  where
+    (fromSq', toSq') = Prelude.splitAt 2 mvString
+    fromSq           = positionToSquare fromSq'
+    toSq             = positionToSquare toSq'
+    p                = pieceAt (board st) fromSq
+    promo            = Nothing
